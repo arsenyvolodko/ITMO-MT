@@ -1,0 +1,60 @@
+grammar thirdLab;
+
+parse () [HashMap<String,Int> value]
+: initVariable($value) {$value.putAll(initVariable0.value)}
+| EPS {}
+;
+
+initVariable (HashMap<String,Int> dict) [HashMap<String,Int> value]
+: VARIABLE EQ {$value.putAll(dict)} expr($value) SEMICOLON {$value.put(VARIABLE0, expr2.value)} initVariable($value) {$value.putAll(initVariable4.value)}
+| SEMICOLON {}
+| EPS {}
+;
+
+expr (HashMap<String,Int> dict) [int value]
+: term(dict) exprS(dict, term0.value) {$value = exprS1.value}
+;
+
+exprS(HashMap<String,Int> dict, int acc) [int value]
+: PLUS term(dict) {$value = acc + term1.value} exprS(dict, $value) {$value = exprS2.value}
+| MINUS term(dict) {$value = acc - term1.value} exprS(dict, $value) {$value = exprS2.value}
+| GCD term(dict) {$value = BigInteger.valueOf(acc.toLong()).gcd(BigInteger.valueOf(term1.value.toLong())).toInt()} exprS(dict, $value) {$value = exprS2.value}
+| EPS {$value = acc}
+;
+
+term (HashMap<String,Int> dict) [int value]
+: factor(dict) termS(dict, factor0.value) {$value = termS1.value}
+;
+
+termS (HashMap<String,Int> dict, int acc) [int value]
+: MUL factor(dict) {$value = acc * factor1.value} termS(dict, $value) {$value = termS2.value}
+| DIV factor(dict) {$value = acc / factor1.value} termS(dict, $value) {$value = termS2.value}
+| EPS {$value = acc}
+;
+
+factor (HashMap<String,Int> dict) [int value]
+: N {$value = Integer.parseInt(N0)}
+| OPEN expr(dict) CLOSE {$value = expr1.value}
+| MINUS i(dict) {$value = i1.value}
+| VARIABLE {$value = dict[VARIABLE0]!!}
+;
+
+
+i (HashMap<String,Int> dict) [int value]
+: N {$value = Integer.parseInt("-" + N0)}
+| OPEN expr(dict) CLOSE {$value = -(expr1.value)}
+| VARIABLE {$value = -dict[VARIABLE0]!!}
+;
+
+PLUS: "\\+";
+MINUS: "-";
+MUL: "\\*";
+DIV: "/";
+GCD: "gcd";
+N: "(0|[1-9][0-9]*)";
+OPEN: "\\(";
+CLOSE: "\\)";
+EPS: "ε";
+EQ: "=";
+SEMICOLON: ";";
+VARIABLE: "[a-zA-Z][a-zA-Z0-9]*";
